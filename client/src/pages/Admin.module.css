@@ -316,6 +316,45 @@
   font-weight: 600;
 }
 
+/* Party Recap Section */
+.recapSection {
+  padding: 1rem 0;
+  margin-top: 1rem;
+  border-top: 1px solid #2a2a4a;
+  border-bottom: 1px solid #2a2a4a;
+}
+
+.recapBtn {
+  width: 100%;
+  padding: 0.875rem;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  border: none;
+  border-radius: 8px;
+  color: white;
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+  box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
+}
+
+.recapBtn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 16px rgba(102, 126, 234, 0.4);
+}
+
+.recapBtn:active {
+  transform: translateY(0);
+}
+
+.recapHint {
+  margin-top: 0.5rem;
+  font-size: 0.75rem;
+  color: var(--text-secondary);
+  text-align: center;
+  font-style: italic;
+}
+
 /* Danger Zone */
 .dangerZone {
   padding-top: 1rem;
