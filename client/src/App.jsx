@@ -3,6 +3,7 @@ import { useGame } from './context/GameContext'
 import Join from './pages/Join'
 import Play from './pages/Play'
 import Admin from './pages/Admin'
+import PartyRecap from './pages/PartyRecap'
 
 function App() {
   const { player, loading } = useGame()
@@ -26,6 +27,7 @@ function App() {
       <Route path="/" element={player ? <Navigate to="/play" replace /> : <Join />} />
       <Route path="/play" element={player ? <Play /> : <Navigate to="/" replace />} />
       <Route path="/admin" element={<Admin />} />
+      <Route path="/admin/recap" element={<PartyRecap />} />
     </Routes>
   )
 }

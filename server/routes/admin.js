@@ -83,6 +83,54 @@ export function createAdminRoutes(db, gameState, io, adminCode) {
     res.json({ success: true });
   });
 
+  // Get party recap data
+  router.get('/party-recap', requireAdmin, (req, res) => {
+    // Get all players with their submissions
+    const players = db.prepare(`
+      SELECT p.*, COUNT(s.id) as submission_count
+      FROM player p
+      LEFT JOIN submission s ON s.player_id = p.id
+      GROUP BY p.id
+      ORDER BY p.display_name
+    `).all();
+
+    // Get all submissions with prompt info
+    const submissions = db.prepare(`
+      SELECT s.*, p.display_name, p.emoji, pr.text as prompt_text, pr.category
+      FROM submission s
+      JOIN player p ON p.id = s.player_id
+      JOIN prompt pr ON pr.id = s.prompt_id
+      ORDER BY pr.order_index
+    `).all();
+
+    // Get scores
+    const scores = db.prepare(`
+      SELECT s.*, p.display_name, p.emoji
+      FROM score s
+      JOIN player p ON p.id = s.player_id
+      ORDER BY s.points DESC
+    `).all();
+
+    // Get prompts
+    const prompts = db.prepare(`
+      SELECT * FROM prompt ORDER BY order_index
+    `).all();
+
+    // Organize submissions by player
+    const playerSubmissions = {};
+    players.forEach(player => {
+      playerSubmissions[player.id] = submissions.filter(s => s.player_id === player.id);
+    });
+
+    res.json({
+      players,
+      submissions,
+      scores,
+      prompts,
+      playerSubmissions
+    });
+  });
+
   // Reset game (danger!)
   router.post('/reset', requireAdmin, (req, res) => {
     // Clear all game data but keep prompts

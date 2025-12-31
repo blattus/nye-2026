@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from 'react'
-import { useSearchParams } from 'react-router-dom'
+import { useSearchParams, useNavigate } from 'react-router-dom'
 import { io } from 'socket.io-client'
 import styles from './Admin.module.css'
 
@@ -7,6 +7,7 @@ const SOCKET_URL = import.meta.env.DEV ? 'http://localhost:3000' : ''
 
 export default function Admin() {
   const [searchParams] = useSearchParams()
+  const navigate = useNavigate()
   const [authenticated, setAuthenticated] = useState(false)
   const [adminCode, setAdminCode] = useState(searchParams.get('code') || '')
   const [error, setError] = useState('')
@@ -556,6 +557,19 @@ export default function Admin() {
               </div>
             )
           })}
+        </div>
+
+        {/* Party Recap Button */}
+        <div className={styles.recapSection}>
+          <button
+            className={styles.recapBtn}
+            onClick={() => navigate('/admin/recap' + window.location.search)}
+          >
+            📖 View Party Recap
+          </button>
+          <div className={styles.recapHint}>
+            Generate a fun summary to share!
+          </div>
         </div>
 
         {/* Danger Zone */}
