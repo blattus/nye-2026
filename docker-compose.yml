@@ -1,0 +1,15 @@
+services:
+  app:
+    build: .
+    ports:
+      - "3000:3000"
+    environment:
+      - NODE_ENV=production
+      - ADMIN_CODE=${ADMIN_CODE:-nye2026admin}
+      - PORT=3000
+    volumes:
+      - nye-data:/app/data
+    restart: unless-stopped
+
+volumes:
+  nye-data:

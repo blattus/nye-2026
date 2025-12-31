@@ -1,0 +1,278 @@
+.container {
+  position: fixed;
+  inset: 0;
+  background: linear-gradient(135deg, #1a1a2e 0%, #0f0f1a 100%);
+  z-index: 200;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1rem;
+  animation: fadeIn 0.3s ease-out;
+}
+
+.content {
+  width: 100%;
+  max-width: 500px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1.5rem;
+}
+
+.timer {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.25rem;
+}
+
+.timerNumber {
+  font-size: 3rem;
+  font-weight: 700;
+  color: var(--accent);
+  line-height: 1;
+  transition: color 0.2s;
+}
+
+.timerNumber.urgent {
+  color: var(--error);
+  animation: pulse 0.5s infinite;
+}
+
+.timerLabel {
+  font-size: 0.875rem;
+  color: #a5b4fc;
+}
+
+.prompt {
+  font-size: 1.125rem;
+  font-weight: 600;
+  text-align: center;
+  color: #d1d5db;
+}
+
+.answer {
+  font-size: 1.5rem;
+  font-weight: 700;
+  text-align: center;
+  padding: 1rem 1.5rem;
+  background: var(--bg-card);
+  border-radius: 16px;
+  max-width: 100%;
+  word-wrap: break-word;
+}
+
+.person {
+  font-size: 2rem;
+  font-weight: 700;
+  text-align: center;
+}
+
+.question {
+  font-size: 1.25rem;
+  font-weight: 600;
+  color: #a5b4fc;
+}
+
+.options {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.optionBtn {
+  width: 100%;
+  min-height: 60px;
+  padding: 1rem 1.25rem;
+  background: var(--bg-card);
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  transition: all 0.15s;
+  border: 2px solid transparent;
+}
+
+.optionBtn:hover:not(:disabled) {
+  background: #303050;
+  transform: translateY(-2px);
+}
+
+.optionBtn.selected {
+  border-color: var(--accent);
+  background: rgba(99, 102, 241, 0.2);
+}
+
+.optionBtn.disabled {
+  opacity: 0.5;
+}
+
+.optionEmoji {
+  font-size: 1.5rem;
+}
+
+.optionName {
+  font-size: 1.125rem;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.optionText {
+  font-size: 1rem;
+  font-weight: 500;
+  text-align: left;
+  color: var(--text-primary);
+}
+
+.waitingVote {
+  padding: 1rem;
+  background: rgba(99, 102, 241, 0.1);
+  border-radius: 12px;
+  color: var(--accent);
+  font-weight: 500;
+  text-align: center;
+  animation: pulse 2s infinite;
+}
+
+.error {
+  background: rgba(239, 68, 68, 0.1);
+  border: 1px solid var(--error);
+  color: var(--error);
+  padding: 0.75rem 1rem;
+  border-radius: 8px;
+  font-size: 0.875rem;
+  width: 100%;
+}
+
+/* Reveal styles */
+.revealCard {
+  text-align: center;
+  padding: 1.5rem;
+  background: var(--bg-card);
+  border-radius: 16px;
+  width: 100%;
+}
+
+.revealLabel {
+  color: var(--text-secondary);
+  margin-bottom: 0.5rem;
+}
+
+.revealAnswer {
+  font-size: 1.5rem;
+  font-weight: 700;
+}
+
+.resultBadge {
+  padding: 0.75rem 1.5rem;
+  border-radius: 12px;
+  font-weight: 600;
+  font-size: 1.125rem;
+}
+
+.resultBadge.correct {
+  background: rgba(34, 197, 94, 0.2);
+  color: var(--success);
+}
+
+.resultBadge.wrong {
+  background: rgba(239, 68, 68, 0.2);
+  color: var(--error);
+}
+
+.distribution {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.distRow {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.distLabel {
+  width: 120px;
+  font-size: 0.875rem;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.distBarContainer {
+  flex: 1;
+  height: 8px;
+  background: var(--bg-secondary);
+  border-radius: 4px;
+  overflow: hidden;
+}
+
+.distBar {
+  height: 100%;
+  background: var(--text-secondary);
+  border-radius: 4px;
+  transition: width 0.5s ease-out;
+}
+
+.distBarCorrect {
+  background: var(--success);
+}
+
+.distCount {
+  width: 24px;
+  text-align: right;
+  font-size: 0.875rem;
+  color: var(--text-secondary);
+}
+
+.myScore {
+  font-size: 1.125rem;
+  color: var(--text-secondary);
+}
+
+.myScore strong {
+  color: var(--gold);
+  font-size: 1.5rem;
+}
+
+.waiting {
+  font-size: 1.25rem;
+  color: var(--text-secondary);
+  animation: pulse 2s infinite;
+}
+
+/* Own answer state */
+.myAnswer {
+  text-align: center;
+  padding: 2rem;
+}
+
+.myAnswerIcon {
+  font-size: 4rem;
+  margin-bottom: 1rem;
+}
+
+.myAnswerText {
+  font-size: 1.5rem;
+  font-weight: 600;
+  color: var(--gold);
+  margin-bottom: 0.5rem;
+}
+
+.myAnswerSubtext {
+  color: var(--text-secondary);
+  font-size: 1rem;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.6; }
+}
