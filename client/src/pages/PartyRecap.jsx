@@ -1,5 +1,7 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { useSearchParams, useNavigate } from 'react-router-dom'
+import html2canvas from 'html2canvas'
+import jsPDF from 'jspdf'
 import styles from './PartyRecap.module.css'
 
 export default function PartyRecap() {
@@ -8,6 +10,8 @@ export default function PartyRecap() {
   const [authenticated, setAuthenticated] = useState(false)
   const [loading, setLoading] = useState(true)
   const [data, setData] = useState(null)
+  const [exporting, setExporting] = useState(false)
+  const contentRef = useRef(null)
 
   // Check authentication
   useEffect(() => {
@@ -40,6 +44,61 @@ export default function PartyRecap() {
     }
   }
 
+  const exportToPDF = async () => {
+    if (!contentRef.current) return
+
+    setExporting(true)
+
+    try {
+      // Temporarily hide the back button for export
+      const backButton = document.querySelector(`.${styles.backButton}`)
+      const exportButton = document.querySelector(`.${styles.exportButton}`)
+      if (backButton) backButton.style.display = 'none'
+      if (exportButton) exportButton.style.display = 'none'
+
+      // Capture the content as canvas
+      const canvas = await html2canvas(contentRef.current, {
+        scale: 3, // Higher quality for better mobile viewing
+        useCORS: true,
+        logging: false,
+        backgroundColor: '#0a0a1f'
+      })
+
+      // Show buttons again
+      if (backButton) backButton.style.display = ''
+      if (exportButton) exportButton.style.display = ''
+
+      // Calculate PDF dimensions
+      const imgWidth = 210 // A4 width in mm
+      const pageHeight = 297 // A4 height in mm
+      const imgHeight = (canvas.height * imgWidth) / canvas.width
+      let heightLeft = imgHeight
+
+      const pdf = new jsPDF('p', 'mm', 'a4')
+      let position = 0
+
+      // Add image to PDF (split into multiple pages if needed)
+      const imgData = canvas.toDataURL('image/jpeg', 0.95)
+      pdf.addImage(imgData, 'JPEG', 0, position, imgWidth, imgHeight)
+      heightLeft -= pageHeight
+
+      while (heightLeft > 0) {
+        position = heightLeft - imgHeight
+        pdf.addPage()
+        pdf.addImage(imgData, 'JPEG', 0, position, imgWidth, imgHeight)
+        heightLeft -= pageHeight
+      }
+
+      // Download the PDF
+      pdf.save('NYE-2026-Party-Recap.pdf')
+    } catch (err) {
+      console.error('Failed to export PDF:', err)
+      alert('Failed to export PDF. Please try again.')
+    } finally {
+      setExporting(false)
+    }
+  }
+
   if (loading) {
     return <div className={styles.loading}>Loading party recap...</div>
   }
@@ -53,7 +112,16 @@ export default function PartyRecap() {
   }
 
   return (
-    <div className={styles.container}>
+    <div className={styles.container} ref={contentRef}>
+      {/* Export Button */}
+      <button
+        className={styles.exportButton}
+        onClick={exportToPDF}
+        disabled={exporting}
+      >
+        {exporting ? '📄 Generating PDF...' : '📄 Download PDF'}
+      </button>
+
       {/* Header */}
       <div className={styles.header}>
         <div className={styles.title}>NYE 2026 Party Recap</div>
