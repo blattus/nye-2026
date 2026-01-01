@@ -83,6 +83,58 @@ export function createAdminRoutes(db, gameState, io, adminCode) {
     res.json({ success: true });
   });
 
+  // Start auto-play mode
+  router.post('/auto-play/start', requireAdmin, (req, res) => {
+    const { rounds, roundType } = req.body;
+
+    if (!rounds || rounds < 1 || rounds > 100) {
+      return res.status(400).json({ error: 'Rounds must be between 1 and 100' });
+    }
+
+    const result = gameState.startAutoPlay(rounds, roundType || 'GUESS_WHO');
+
+    // Immediately start the first round if we're in REEL mode
+    if (gameState.status === 'REEL') {
+      const candidate = gameState.getCandidateRound(roundType || 'GUESS_WHO');
+
+      if (candidate.error) {
+        gameState.stopAutoPlay();
+        return res.status(400).json({ error: candidate.error });
+      }
+
+      const roundResult = gameState.startRound(candidate, io);
+
+      if (roundResult.error) {
+        gameState.stopAutoPlay();
+        return res.status(400).json({ error: roundResult.error });
+      }
+
+      gameState.autoPlayRoundsRemaining--;
+
+      // Broadcast round start to all clients
+      io.emit('round_started', {
+        id: roundResult.round.id,
+        type: roundResult.round.type,
+        prompt: roundResult.round.prompt,
+        showAnswer: roundResult.round.showAnswer,
+        showPerson: roundResult.round.showPerson,
+        options: roundResult.round.options,
+        deadline: roundResult.round.deadline
+      });
+    }
+
+    io.emit('state_update', gameState.getState());
+
+    res.json({ success: true, roundsRemaining: gameState.autoPlayRoundsRemaining });
+  });
+
+  // Stop auto-play mode
+  router.post('/auto-play/stop', requireAdmin, (req, res) => {
+    gameState.stopAutoPlay();
+    io.emit('state_update', gameState.getState());
+    res.json({ success: true });
+  });
+
   // Get party recap data
   router.get('/party-recap', requireAdmin, (req, res) => {
     // Get all players with their submissions

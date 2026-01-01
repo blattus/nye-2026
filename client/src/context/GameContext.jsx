@@ -71,11 +71,24 @@ export function GameProvider({ children }) {
     newSocket.on('authenticated', (data) => {
       setGameState(data.gameState)
       setReelItem(data.reelItem)
+      // If joining during active round, set currentRound from gameState
+      if (data.gameState?.currentRound) {
+        setCurrentRound(data.gameState.currentRound)
+        setMyVote(null)
+        setRevealData(null)
+      }
     })
 
     newSocket.on('state_update', (data) => {
-      setGameState(data.gameState || data)
+      const newGameState = data.gameState || data
+      setGameState(newGameState)
       if (data.reelItem) setReelItem(data.reelItem)
+      // Sync currentRound if state changed to REEL (round ended)
+      if (newGameState.status === 'REEL' && currentRound) {
+        setCurrentRound(null)
+        setMyVote(null)
+        setRevealData(null)
+      }
     })
 
     newSocket.on('reel_tick', (item) => {

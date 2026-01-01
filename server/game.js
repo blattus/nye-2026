@@ -16,13 +16,19 @@ export class GameState {
     this.connectedPlayers = new Map(); // socketId -> playerId
     this.roundTimer = null;
     this.revealTimer = null;
+    this.autoPlayEnabled = false;
+    this.autoPlayRoundsRemaining = 0;
+    this.autoPlayRoundType = 'GUESS_WHO';
+    this.autoPlayTimer = null;
   }
 
   getState() {
     return {
       status: this.status,
       currentRound: this.currentRound,
-      reelIndex: this.reelIndex
+      reelIndex: this.reelIndex,
+      autoPlayEnabled: this.autoPlayEnabled,
+      autoPlayRoundsRemaining: this.autoPlayRoundsRemaining
     };
   }
 
@@ -299,6 +305,60 @@ export class GameState {
     this.currentRound = null;
 
     io.emit('state_update', this.getState());
+
+    // If auto-play is enabled, start next round after 3 seconds
+    if (this.autoPlayEnabled && this.autoPlayRoundsRemaining > 0) {
+      this.autoPlayTimer = setTimeout(() => {
+        const candidate = this.getCandidateRound(this.autoPlayRoundType);
+        if (!candidate.error) {
+          const result = this.startRound(candidate, io);
+          if (result.success) {
+            this.autoPlayRoundsRemaining--;
+            io.emit('round_started', {
+              id: result.round.id,
+              type: result.round.type,
+              prompt: result.round.prompt,
+              showAnswer: result.round.showAnswer,
+              showPerson: result.round.showPerson,
+              options: result.round.options,
+              deadline: result.round.deadline
+            });
+            io.emit('state_update', this.getState());
+          } else {
+            // Failed to start round, disable auto-play
+            this.stopAutoPlay();
+            io.emit('state_update', this.getState());
+          }
+        } else {
+          // No valid candidate, disable auto-play
+          this.stopAutoPlay();
+          io.emit('state_update', this.getState());
+        }
+      }, 3000);
+    } else if (this.autoPlayEnabled && this.autoPlayRoundsRemaining === 0) {
+      // Auto-play finished
+      this.stopAutoPlay();
+      io.emit('state_update', this.getState());
+    }
+  }
+
+  // Start auto-play mode
+  startAutoPlay(rounds, roundType = 'GUESS_WHO') {
+    this.autoPlayEnabled = true;
+    this.autoPlayRoundsRemaining = rounds;
+    this.autoPlayRoundType = roundType;
+    return { success: true };
+  }
+
+  // Stop auto-play mode
+  stopAutoPlay() {
+    if (this.autoPlayTimer) {
+      clearTimeout(this.autoPlayTimer);
+      this.autoPlayTimer = null;
+    }
+    this.autoPlayEnabled = false;
+    this.autoPlayRoundsRemaining = 0;
+    return { success: true };
   }
 
   // Admin stats

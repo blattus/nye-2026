@@ -28,6 +28,8 @@ export default function Admin() {
   const [sidebarVisible, setSidebarVisible] = useState(true)
   const [showLeaderboard, setShowLeaderboard] = useState(false)
   const [reelProgress, setReelProgress] = useState(100)
+  const [autoPlayRounds, setAutoPlayRounds] = useState(20)
+  const [autoPlayType, setAutoPlayType] = useState('GUESS_WHO')
 
   // Verify admin code
   const verifyAdmin = useCallback(async (code) => {
@@ -110,14 +112,30 @@ export default function Admin() {
       if (data.reelItem) {
         setCurrentReelItem(data.reelItem)
       }
+      // If joining during an active round, sync currentRound
+      if (data.gameState?.status === 'ROUND_ACTIVE' && data.gameState?.currentRound) {
+        setCurrentRound(data.gameState.currentRound)
+        setRevealData(null)
+        setVoteCount(0)
+      }
     })
 
     newSocket.on('state_update', (data) => {
-      setGameState(data.gameState || data)
+      const newState = data.gameState || data
+      setGameState(newState)
+
+      // Sync currentRound from gameState if status is ROUND_ACTIVE
+      if (newState.status === 'ROUND_ACTIVE' && newState.currentRound) {
+        setCurrentRound(newState.currentRound)
+      }
+      // Clear round data if returning to REEL
+      else if (newState.status === 'REEL') {
+        setCurrentRound(null)
+        setRevealData(null)
+      }
     })
 
     newSocket.on('reel_tick', (item) => {
-      console.log('Received reel_tick:', item?.answer_text)
       if (item) {
         setCurrentReelItem(item)
         setReelKey(prev => prev + 1) // Trigger animation
@@ -224,6 +242,30 @@ export default function Admin() {
     if (!confirm('Are you sure? This will delete all players and submissions!')) return
     await fetch('/api/admin/reset', { method: 'POST', credentials: 'include' })
     window.location.reload()
+  }
+
+  // Start auto-play
+  const startAutoPlay = async () => {
+    try {
+      const res = await fetch('/api/admin/auto-play/start', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify({ rounds: autoPlayRounds, roundType: autoPlayType })
+      })
+
+      if (!res.ok) {
+        const data = await res.json()
+        alert(data.error || 'Failed to start auto-play')
+      }
+    } catch (err) {
+      alert('Failed to start auto-play')
+    }
+  }
+
+  // Stop auto-play
+  const stopAutoPlay = async () => {
+    await fetch('/api/admin/auto-play/stop', { method: 'POST', credentials: 'include' })
   }
 
   // Login form
@@ -448,9 +490,84 @@ export default function Admin() {
           </div>
         )}
 
-        {/* Round Controls */}
-        {gameState.status === 'REEL' && (
+        {/* Auto-Play Controls */}
+        {gameState.status === 'REEL' && !gameState.autoPlayEnabled && (
+          <div className={styles.autoPlaySection}>
+            <div className={styles.autoPlayHeader}>
+              <span className={styles.autoPlayIcon}>🤖</span>
+              <span className={styles.autoPlayTitle}>Auto-Play Mode</span>
+            </div>
+            <div className={styles.autoPlayDescription}>
+              Automatically run multiple rounds in a row
+            </div>
+
+            <div className={styles.controlSection}>
+              <label className={styles.controlLabel}>Number of Rounds</label>
+              <input
+                type="number"
+                className="input"
+                min="1"
+                max="100"
+                value={autoPlayRounds}
+                onChange={(e) => setAutoPlayRounds(parseInt(e.target.value) || 1)}
+                style={{ width: '100%' }}
+              />
+            </div>
+
+            <div className={styles.controlSection}>
+              <label className={styles.controlLabel}>Round Type</label>
+              <div className={styles.typeToggle}>
+                <button
+                  className={`${styles.typeBtn} ${autoPlayType === 'GUESS_WHO' ? styles.active : ''}`}
+                  onClick={() => setAutoPlayType('GUESS_WHO')}
+                >
+                  Guess Who
+                </button>
+                <button
+                  className={`${styles.typeBtn} ${autoPlayType === 'GUESS_WHAT' ? styles.active : ''}`}
+                  onClick={() => setAutoPlayType('GUESS_WHAT')}
+                  disabled={!stats?.guessWhatEligible}
+                >
+                  Guess What
+                </button>
+              </div>
+            </div>
+
+            <button
+              className="btn btn-primary btn-large"
+              style={{ width: '100%', marginTop: '1rem' }}
+              onClick={startAutoPlay}
+              disabled={stats && stats.totalPlayers < 4}
+            >
+              🚀 Start Auto-Play
+            </button>
+          </div>
+        )}
+
+        {/* Auto-Play Active Indicator */}
+        {gameState.autoPlayEnabled && (
+          <div className={styles.autoPlayActive}>
+            <div className={styles.autoPlayActiveHeader}>
+              <span className={styles.autoPlayActiveIcon}>🤖</span>
+              <span>Auto-Play Active</span>
+            </div>
+            <div className={styles.autoPlayRemaining}>
+              {gameState.autoPlayRoundsRemaining} rounds remaining
+            </div>
+            <button
+              className="btn btn-secondary"
+              style={{ width: '100%', marginTop: '0.5rem' }}
+              onClick={stopAutoPlay}
+            >
+              ⏹ Stop Auto-Play
+            </button>
+          </div>
+        )}
+
+        {/* Manual Round Controls */}
+        {gameState.status === 'REEL' && !gameState.autoPlayEnabled && (
           <div className={styles.roundControls}>
+            <div className={styles.manualModeHeader}>Manual Mode</div>
             <div className={styles.controlSection}>
               <label className={styles.controlLabel}>Round Type</label>
               <div className={styles.typeToggle}>
